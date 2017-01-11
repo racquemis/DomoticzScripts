@@ -1,7 +1,8 @@
+-- Paste the code below in a new Lua Time Event
 commandArray = {}
 
-interval = 1
-ttidx = "151"
+interval = 5 -- In Minutes
+ttidx = "151" -- idx of Text Dummy in Domoticz
 local m = os.date('%M')
 if (m % interval == 0) then
   function address(longitude, latitude)
