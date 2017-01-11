@@ -32,8 +32,9 @@ Installation
 - Place the script in the domoticz/scripts/python folder.
 - Assign 0775 Permission to the script.
 - Create a cronjob to attempt to run the script every 10 minutes.
-``` */10 * * * *  /home/pi/domoticz/scripts/python/plex.py
+```*/10 * * * *  /home/pi/domoticz/scripts/python/plex.py
 ```
+
 
 Authentication
 ---------------
