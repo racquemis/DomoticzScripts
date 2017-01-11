@@ -37,5 +37,9 @@ Installation
 
 Authentication
 ---------------
-The script is made for Plex Server sthat are setup NOT to use authentication. If your server does use authentication try the following: 
-Under Plex Options>Server>Network you can specify which networks can access the server without authentication. You can enter specific IP addresses or whole networks (e.g 192.168.0.1) don’t forget to add the subnet as shows in the settings description.When using Plex Home: Fill in the plexToken parameter in the script. Follow [these](https://support.plex.tv/hc/en-us/articles/204059436-Finding-your-account-token-X-Plex-Token) instructions to retrieve the token.
+The script is configured for Plex Servers that are setup NOT to use authentication. 
+If your server does use authentication try the following: 
+Under Plex Options>Server>Network you can specify which networks can access the server without authentication.
+You can enter specific IP addresses or whole networks (e.g 192.168.0.1) don’t forget to add the subnet as shows in the settings description.
+When using Plex Home: Fill in the plexToken parameter in the script. 
+Follow [these](https://support.plex.tv/hc/en-us/articles/204059436-Finding-your-account-token-X-Plex-Token) instructions to retrieve the token.
