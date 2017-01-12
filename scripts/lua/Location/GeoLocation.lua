@@ -16,10 +16,10 @@ function round(num, idp)
 end
 
 commandArray = {}
-if (string.len(tostring(uservariablechanged['Location [NAME]'])) > 3) then
+if (string.len(tostring(uservariablechanged['Current Location'])) > 3) then
 	print('change detected: '..uservariables['Home Location'])
 	home_latitude, home_longitude = uservariables['Home Location']:match("([^,]+),([^,]+)")
-	latitude, longitude = uservariablechanged['Location [NAME]']:match("([^,]+),([^,]+)")
+	latitude, longitude = uservariablechanged['Current Location']:match("([^,]+),([^,]+)")
 	dlon = math.rad(home_longitude-longitude)
 	dlat = math.rad(home_latitude-latitude)
 	sin_dlat = math.sin(dlat/2)
