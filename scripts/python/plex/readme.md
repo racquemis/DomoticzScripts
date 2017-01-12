@@ -27,7 +27,6 @@ Preparation
 - Open the script in notepad and change the domoticz and Plex IP/Port to match your own setup.
 - Enter the names of the plex clients under dom_PlexPlayers and their corresponding text object IDX under dom_PlexPlayInfo_ID.
 - Save the script.
-PreparationIn Domoticz create an text object or each for of the plex clients you wish monitor, write down their corresponding IDXOpen the script in notepad and change the domoticz and plex IP/port to match your own setup.Enter the names of the plex clients under dom_PlexPlayers and their corresponding text object idx under dom_PlexPlayInfo_IDSave the script
 
 Installation
 -------------
