@@ -16,7 +16,7 @@ function round(num, idp)
 end
 
 commandArray = {}
-if (string.len(tostring(uservariablechanged['Location [Jasper]'])) > 3) then
+if (string.len(tostring(uservariablechanged['Location [NAME]'])) > 3) then
 	print('change detected: '..uservariables['Home Location'])
 	home_latitude, home_longitude = uservariables['Home Location']:match("([^,]+),([^,]+)")
 	latitude, longitude = uservariablechanged['Location [NAME]']:match("([^,]+),([^,]+)")
