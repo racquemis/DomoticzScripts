@@ -16,8 +16,8 @@ if (m % interval == 0) then
     handle:close()
     return output
   end
-  current_address = otherdevices['Locatie [Jasper]']
-  current_location = uservariables["Location [Jasper]"]
+  current_address = otherdevices['Location']
+  current_location = uservariables["Current Location"]
   distance_from_home = uservariables["DistanceFromHome"]
   current_latitude, current_longitude = current_location:match("([^,]+),([^,]+)")
   new_address = address(current_longitude,current_latitude)
@@ -25,7 +25,7 @@ if (m % interval == 0) then
   new_address = string.gsub(new_address,',','<br>')
   if (current_address ~= new_address) then
      commandArray['UpdateDevice'] = ttidx..'|0|'..new_address
-     print("Locatie Jasper gewijzigd, nieuw adres: "..new_address)
+     print("Locatie gebruiker gewijzigd, nieuw adres: "..new_address)
   end
 end
 
