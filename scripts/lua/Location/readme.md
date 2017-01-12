@@ -19,7 +19,7 @@ Preparation
 - Create a user variable of type float with the name 'DistanceFromHome'
 - Create a text Object in domoticz with the name 'Location'
 - Look up the GPS coordinates of your home. Enter your address on [gps-coordinates.net](http://www.gps-coordinates.net/) 
-- Enter the GPS coordinates in the 'Home Location' User variable using the following format: <Latitude>,<Longitude> e.g. 52.395139,6.001595
+- Enter the GPS coordinates in the 'Home Location' User variable using the following format: [Latitude],[Longitude] e.g. 52.395139,6.001595
 - Install the Tasker Application on your android device
 
 Installation - Setting Up Tasker
@@ -30,28 +30,28 @@ Installation - Setting Up Tasker
 	- go to the tasks tab and press the Add button (+) in the lower right corner.
 	- Enter a name and accept.
 	- Add an new action: Location-> Get Location
-		- Set Source to GPS for the highest accuracy
+		- Set Source to `GPS` for the highest accuracy
 		- Leave Timeout at 100s
 		- Press the logo in the top-left corner
 	- Add a new action: Variables-> Set Variable
-		- Under 'Name' enter: %LOCATION
-		- Under 'To' Enter: %LOC
-		- Press the '+' next to 'If' and enter: %LOC
-		- Press the ~ button and select: 'Is Set'
+		- Under `Name` enter: %LOCATION
+		- Under `To` Enter: %LOC
+		- Press the `+` next to `If` and enter: %LOC
+		- Press the `~` button and select: `Is Set`
 		- Press the logo in the top left corner
 	- Add a new action: Variables-> Set Variable
-		- Under 'Name' enter: %LOCATION
-		- Under 'To' Enter: %LOCN
-		- Press the '+' next to 'If' and enter: %LOC
-		- Press the ~ button and select: 'Is Not Set'
+		- Under `Name` enter: %LOCATION
+		- Under `To` Enter: %LOCN
+		- Press the `+` next to `If` and enter: %LOC
+		- Press the `~` button and select: `Is Not Set`
 		- Press the logo in the top-left corner
 	-Add a new action: Net->HTTP Get
-		- Under Server:Port Add the following: <Username>:<Password>@<RemoteIP>:<RemotePort>/json.htm?type=command&param=updateuservariable&vname=Current%20Location&vtype=2&vvalue=%LOCATION
+		- Under Server:Port Add the following: `[Username]:[Password]@[RemoteIP]:[RemotePort]/json.htm?type=command&param=updateuservariable&vname=Current%20Location&vtype=2&vvalue=%LOCATION`
 		- Press the logo in the top-left corner to return.
 - Create a new profile
 	- Go to the profiles tab and press the Add button (+) in the lower right corner
 	- Select Time
-	- Set the 'From' Time to whatever time you want the polling to start
+	- Set the `From` Time to whatever time you want the polling to start
 	- Place a checkmark at `Repeat` and enter the polling interval . e.g. 10 minutes
 	- Set the `To` Time to whatever time you want the polling to end
 	- Press the logo in the top-left corner to return to the previous page .
