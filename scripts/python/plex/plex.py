@@ -8,9 +8,11 @@ import time
 import os
 import urllib, urllib2, hashlib,subprocess
 from xml.etree import ElementTree as ET
+
+
 ErrorCount = 0
 #general Script settings
-plex_Interval                 = 5     # Poll Interval. The Plex Server updates the session status every 10 seconds. Leave at 5 to not mis any state change.
+plex_Interval                 = 4     # Poll Interval. The Plex Server updates the session status every 10 seconds. Leave at 5 to not mis any state change.
 plex_ShowPlayProgress         = True 
 plex_AutoClearPlayLog         = True  # Should be enabled when showing Play Progress
 plex_AutoCreateUserVariables  = True  # Automatically create a user variable for each Client listed under dom_PlexPlayers
@@ -30,18 +32,17 @@ plex_Audio_Stopped    = 13
 plex_Audio_Buffering  = 14
 
 #Plex Server Settings
-plexIP                 = '192.168.0.142'
+plexIP                 = '192.168.2.142'
 plexPort               = '32400'          # (default port = 32400)
-plexToken              = ''               # (Fill in when using Plex Home. To Retrieve Token: https://support.plex.tv/hc/en-us/articles/204059436-Finding-your-account-token-X-Plex-Token)
 
 #domoticz settings
-domoticz_host          = '192.168.0.148'
+domoticz_host          = '192.168.2.148'
 domoticz_port          = '8080'
 domoticz_url           = 'json.htm'
 
 #Translation Array - It's also possible to specify custom search strings. Place them at the beginning of the array.
-transl_search    = ['Playing','Stopped','Buffering','Paused','Video','Movie','Episode','Clip','Audio','Slideshow']
-transl_replace    = ['','','','','','','','','',''] #place replacement string on the same index as the search string. empty strings are not processed.
+transl_search 	= ['Playing','Stopped','Buffering','Paused','Video','Movie','Episode','Clip','Audio','Slideshow']
+transl_replace 	= ['','','','','','','','','',''] #place replacement string on the same index as the search string. empty strings are not processed.
 
 #Plex Players Settings - This script handles multiple players
 dom_PlexPlayers        = ['OpenELEC-PHT','Jasper-TPC'] #Players not on this list will be ignored
@@ -57,8 +58,20 @@ plex_PreviousTitle     = []
 plex_AlreadyIdle       = []
 
 #building url
-requestURL = 'http://'+ plexIP + ':' + plexPort + '/status/sessions/?X-Plex-Token=' + plexToken
-statusValue = 0
+requestURL = 'http://'+ plexIP + ':' + plexPort + '/status/sessions'
+
+#lock file
+pidfile = sys.argv[0] + '_' + plexIP + '.pid'
+if os.path.isfile( pidfile ):
+  if (time.time() - os.path.getmtime(pidfile)) < (float(5) * 4):
+    print datetime.datetime.now().strftime("%H:%M:%S") + "- script seems to be still running, exiting"
+    print datetime.datetime.now().strftime("%H:%M:%S") + "- If this is not correct, please delete file " + pidfile
+    sys.exit(0)
+  else:
+    print datetime.datetime.now().strftime("%H:%M:%S") + "- Seems to be an old file, ignoring."
+else:
+  open(pidfile, 'w').close()
+
 #Ensure equal list sizes
 while len(dom_PlexPlayInfo_ID)<len(dom_PlexPlayers):
   dom_PlexPlayInfo_ID.append('-1')
@@ -77,6 +90,7 @@ while len(plex_AlreadyIdle)<len(dom_PlexPlayers):
 while len(transl_replace)<len(transl_search):
   transl_replace.append('')
 
+statusValue = 0
 # create play Status user variable for each client
 if plex_AutoCreateUserVariables:
   for client in dom_PlexPlayers:
@@ -89,19 +103,7 @@ if plex_AutoCreateUserVariables:
       dom_PlexPlayState_ID[idx] = name
     except Exception:
       print 'Connection Error'
-
-pidfile = sys.argv[0] + '_' + plexIP + '.pid'
-if os.path.isfile( pidfile ):
-  if (time.time() - os.path.getmtime(pidfile)) < (float(5) * 3):
-    print datetime.datetime.now().strftime("%H:%M:%S") + "- script seems to be still running, exiting"
-    print datetime.datetime.now().strftime("%H:%M:%S") + "- If this is not correct, please delete file " + pidfile
-    sys.exit(0)
-  else:
-    print datetime.datetime.now().strftime("%H:%M:%S") + "- Seems to be an old file, ignoring."
-else:
-  open(pidfile, 'w').close()
-
-  
+ 
 def translate(playstring):
   returnstring = playstring
   for idx in range(0, len(transl_search)):
@@ -113,9 +115,9 @@ def translate(playstring):
 while 1==1:
   try:
     #call session url
-    ProcessedIDs=[]
     test = urllib2.urlopen(requestURL,timeout = 5).read()
     root = ET.XML(test)
+    ProcessedIDs=[]
     #Video Support
     for video in root.findall('Video'):
       # Get Attributes for each player
@@ -152,7 +154,6 @@ while 1==1:
       StateChange = 0
       PlayerID = dom_PlexPlayers.index(player) if player in dom_PlexPlayers else -1
       if PlayerID >= 0:  #only process players that are on the list
-        plex_AlreadyIdle[PlayerID] = False
         try:
           # Check if there is progress
           if (viewOffset>plex_LastOffset[PlayerID] and state=="playing") or  (videotitle!=plex_PreviousTitle[PlayerID]):
@@ -184,27 +185,28 @@ while 1==1:
           if StateChange == 1:
             url = "http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url + "?type=command&param=addlogmessage&message=" + PlayString
             urllib2.urlopen(url , timeout = 5)
-
-          if "play" in PlayString.Lower():
-            statusValue = plex_Video_Playing
-          elif "paused" in PlayString.Lower():
-            statusValue = plex_Video_Paused
-          elif "stopped" in PlayString.Lower():
-            statusValue = plex_Video_Stopped
-          elif "buffering" in PlayString.Lower():
-            statusValue = plex_Video_Buffering
-
+            plex_AlreadyIdle[PlayerID] = False
           #uploading values to domoticz
           url = "http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url + "?type=command&param=udevice&idx=" + dom_PlexPlayInfo_ID[PlayerID] + "&nvalue=0&svalue=" + PlayString
           urllib2.urlopen(url , timeout = 5)
-          url = ("http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url + "?type=command&param=updateuservariable&vname=" + dom_PlexPlayState_ID[PlayerID] + "&vtype=integer&vvalue=" + str(statusValue))
-          url = urllib.quote(url.encode('utf-8'), safe="%/:=&?~#+!$,;'@()*[]'")
-          urllib2.urlopen(url,timeout = 5)
           
-          if plex_LastOffset[PlayerID] != viewOffset or state=="stopped":
+          if state == "playing":
+            statusValue = plex_Video_Playing
+          elif state == "paused":
+            statusValue = plex_Video_Paused
+          elif state == "stopped":
+            statusValue = plex_Video_Stopped
+          elif state =="buffering":
+            statusValue = plex_Video_Buffering
+
+          if plex_LastOffset[PlayerID] != viewOffset or state == "stopped":
             if plex_AutoClearPlayLog:
               url = "http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url + "?type=command&param=clearlightlog&idx=" + dom_PlexPlayInfo_ID[PlayerID]
               urllib2.urlopen(url , timeout = 5)
+          if StateChange == 1:
+            url = ("http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url + "?type=command&param=updateuservariable&vname=" + dom_PlexPlayState_ID[PlayerID] + "&vtype=integer&vvalue=" + str(statusValue))
+            url = urllib.quote(url.encode('utf-8'), safe="%/:=&?~#+!$,;'@()*[]'")
+            urllib2.urlopen(url,timeout = 5)
           plex_LastOffset[PlayerID] = viewOffset
           
           ProcessedIDs.append(PlayerID)
@@ -214,6 +216,7 @@ while 1==1:
           print e
           print traceback.print_exc()
           #uploading values to domoticz
+          
           url = ("http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url+ "?type=command&param=udevice&idx=" + dom_PlexPlayInfo_ID[PlayerID] + "&nvalue=0&svalue=No%20Media%20Playing")
           urllib2.urlopen(url,timeout = 5)
           pass
@@ -253,7 +256,6 @@ while 1==1:
       StateChange = 0
       PlayerID = dom_PlexPlayers.index(player) if player in dom_PlexPlayers else -1
       if PlayerID >= 0:  #only process players that are on the list
-        plex_AlreadyIdle[PlayerID] = False
         try:
           # Check if there is progress
           if (viewOffset>plex_LastOffset[PlayerID] and state=="playing") or  (audiotitle!=plex_PreviousTitle[PlayerID]):
@@ -277,6 +279,10 @@ while 1==1:
           if StateChange == 1:
             url = "http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url + "?type=command&param=addlogmessage&message=" + PlayString
             urllib2.urlopen(url , timeout = 5)
+            plex_AlreadyIdle[PlayerID] = False
+          #uploading values to domoticz
+          url = "http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url + "?type=command&param=udevice&idx=" + dom_PlexPlayInfo_ID[PlayerID] + "&nvalue=0&svalue=" + PlayString
+          urllib2.urlopen(url , timeout = 5)
           
           if state == "playing":
             statusValue = plex_Audio_Playing
@@ -287,17 +293,14 @@ while 1==1:
           elif state =="buffering":
             statusValue = plex_Audio_Buffering
 
-          #uploading values to domoticz
-          url = "http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url + "?type=command&param=udevice&idx=" + dom_PlexPlayInfo_ID[PlayerID] + "&nvalue=0&svalue=" + PlayString
-          urllib2.urlopen(url , timeout = 5)
-          url = ("http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url + "?type=command&param=updateuservariable&vname=" + dom_PlexPlayState_ID[PlayerID] + "&vtype=integer&vvalue=" + str(statusValue))
-          url = urllib.quote(url.encode('utf-8'), safe="%/:=&?~#+!$,;'@()*[]'")
-          urllib2.urlopen(url,timeout = 5)
-          
           if plex_LastOffset[PlayerID] != viewOffset:
             if plex_AutoClearPlayLog:
               url = "http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url + "?type=command&param=clearlightlog&idx=" + dom_PlexPlayInfo_ID[PlayerID]
               urllib2.urlopen(url , timeout = 5)
+          if StateChange == 1:
+            url = ("http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url + "?type=command&param=updateuservariable&vname=" + dom_PlexPlayState_ID[PlayerID] + "&vtype=integer&vvalue=" + str(statusValue))
+            url = urllib.quote(url.encode('utf-8'), safe="%/:=&?~#+!$,;'@()*[]'")
+            urllib2.urlopen(url,timeout = 5)
           plex_LastOffset[PlayerID] = viewOffset
           ProcessedIDs.append(PlayerID)
       
@@ -321,7 +324,6 @@ while 1==1:
       StateChange = 0
       PlayerID = dom_PlexPlayers.index(player) if player in dom_PlexPlayers else -1
       if PlayerID >= 0:  #only process players that are on the list
-        plex_AlreadyIdle[PlayerID] = False
         try:
           if plex_PreviousState[PlayerID] == state:
             StateChange = 0
@@ -335,6 +337,7 @@ while 1==1:
           if StateChange == 1:
             url = "http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url + "?type=command&param=addlogmessage&message=" + PlayString
             urllib2.urlopen(url , timeout = 5)
+            plex_AlreadyIdle[PlayerID] = False
             #uploading values to domoticz
             url = "http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url + "?type=command&param=udevice&idx=" + dom_PlexPlayInfo_ID[PlayerID] + "&nvalue=0&svalue=" + PlayString
             urllib2.urlopen(url , timeout = 5)
@@ -360,7 +363,8 @@ while 1==1:
     #set play status to IDLE
     for i in range(0, len(dom_PlexPlayers)):
       if i not in ProcessedIDs and plex_AlreadyIdle[i] == False:
-        print 'IDLE'
+        plex_PreviousState[i]=-2
+        print 'No Media Playing'
         url = ("http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url+ "?type=command&param=udevice&idx=" + dom_PlexPlayInfo_ID[i] + "&nvalue=0&svalue=No%20Media%20Playing")
         urllib2.urlopen(url,timeout = 5)
         url = ("http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url+ "?type=command&param=updateuservariable&vname=" + dom_PlexPlayState_ID[i] + "&vtype=integer&vvalue=0")
@@ -369,18 +373,21 @@ while 1==1:
         plex_AlreadyIdle[i] = True
     ErrorCount = 0 
   except Exception,e:
-    print traceback.print_exc()
-    ErrorCount+=1
-    if ErrorCount == plex_MaxErrorCount:
-      print 'PLEX OFFLINE'
-      for i in range(0, len(dom_PlexPlayers)):
-        if plex_AlreadyIdle[i] == False:
-          url = ("http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url+ "?type=command&param=udevice&idx=" + dom_PlexPlayInfo_ID[i] + "&nvalue=0&svalue=No%20Media%20Playing")
-          urllib2.urlopen(url,timeout = 5)
-          url = ("http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url+ "?type=command&param=updateuservariable&vname=" + dom_PlexPlayState_ID[i] + "&vtype=integer&vvalue=" + str(plex_ServerOffline))
-          url = urllib.quote(url.encode('utf-8'), safe="%/:=&?~#+!$,;'@()*[]'")
-          urllib2.urlopen(url,timeout = 5)
-          plex_AlreadyIdle[i] = True
-      pass
+   print traceback.print_exc()
+   try:
+      ErrorCount+=1
+      if ErrorCount == plex_MaxErrorCount:
+         print 'PLEX OFFLINE'
+         for i in range(0, len(dom_PlexPlayers)):
+            if plex_AlreadyIdle[i] == False:
+               url = ("http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url+ "?type=command&param=udevice&idx=" + dom_PlexPlayInfo_ID[i] + "&nvalue=0&svalue=No%20Media%20Playing")
+               urllib2.urlopen(url,timeout = 5)
+               url = ("http://" + domoticz_host + ":" + domoticz_port + "/" + domoticz_url+ "?type=command&param=updateuservariable&vname=" + dom_PlexPlayState_ID[i] + "&vtype=integer&vvalue=" + str(plex_ServerOffline))
+               url = urllib.quote(url.encode('utf-8'), safe="%/:=&?~#+!$,;'@()*[]'")
+               urllib2.urlopen(url,timeout = 5)
+               plex_AlreadyIdle[i] = True
+               pass
+   except Exception,e:
+     print traceback.print_exc()
   time.sleep (plex_Interval)
   open(pidfile, 'w').close()
