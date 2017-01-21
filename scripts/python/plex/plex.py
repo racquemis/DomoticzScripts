@@ -16,7 +16,7 @@ plex_Interval                 = 4     # Poll Interval. The Plex Server updates t
 plex_ShowPlayProgress         = True 
 plex_AutoClearPlayLog         = True  # Should be enabled when showing Play Progress
 plex_AutoCreateUserVariables  = True  # Automatically create a user variable for each Client listed under dom_PlexPlayers
-plex_ViewOffsetTimeout        = 15    # In seconds.
+plex_ViewOffsetTimeout        = 20    # In seconds.
 plex_MaxErrorCount            = 3     # number of consecutive errors until Plex is considered Offline
 
 #RunState values (for user variable)
