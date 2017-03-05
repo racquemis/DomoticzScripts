@@ -21,7 +21,8 @@ plex_MaxErrorCount            = 3     # number of consecutive errors until Plex 
 
 #RunState values (for user variable)
 plex_ServerOffline    = -1
-plex_Idle             = 0plex_Video_Playing    = 1
+plex_Idle             = 0
+plex_Video_Playing    = 1
 plex_Video_Paused     = 2
 plex_Video_Stopped    = 3
 plex_Video_Buffering  = 4
