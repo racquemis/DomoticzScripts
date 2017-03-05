@@ -34,6 +34,7 @@ plex_Audio_Buffering  = 14
 #Plex Server Settings
 plexIP                 = '192.168.2.142'
 plexPort               = '32400'          # (default port = 32400)
+plexToken              = ''
 
 #domoticz settings
 domoticz_host          = '192.168.2.148'
@@ -58,7 +59,7 @@ plex_PreviousTitle     = []
 plex_AlreadyIdle       = []
 
 #building url
-requestURL = 'http://'+ plexIP + ':' + plexPort + '/status/sessions'
+requestURL = 'http://'+ plexIP + ':' + plexPort + '/status/sessions??X-Plex-Token=' + plexToken
 
 #lock file
 pidfile = sys.argv[0] + '_' + plexIP + '.pid'
