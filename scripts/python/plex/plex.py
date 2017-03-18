@@ -162,7 +162,7 @@ while 1==1:
           elif viewOffset == plex_LastOffset[PlayerID]:
             plex_LastOffsetUpdate[PlayerID] += 1
 
-          if plex_LastOffsetUpdate[PlayerID] >= int(plex_ViewOffsetTimeout/plex_Interval) and state == "playing":
+          if plex_LastOffsetUpdate[PlayerID] >= int(plex_ViewOffsetTimeout/plex_Interval) and state == "playing" and viewOffset is not None:
             state = "stopped"
 
           if plex_PreviousState[PlayerID] == state:
